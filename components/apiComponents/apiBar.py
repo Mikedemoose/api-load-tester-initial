@@ -17,7 +17,7 @@ class ApiBar(QWidget):
         self.apiUrl.setPlaceholderText("API Endpoint")
 
         self.setLayout(QHBoxLayout())
-        self.layout().addWidget(self.apiMethod, 2)
+        self.layout().addWidget(self.apiMethod, 1)
         self.layout().addWidget(self.apiUrl, 8)
 
     def getData(self):

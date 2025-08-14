@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLineEdit, QVBoxLayout, QHBoxLayout, QWidget
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QWidget
 from PyQt5.QtCore import Qt
 from components.addAPI import AddAPIWindow
 
@@ -7,6 +7,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.ItemList = []
+        self.APIList = []
         self.Counter = 0
         self.CurrentItemName = ""
         self.saveWorkflowButton = QPushButton("Save Workflow", self)
@@ -23,6 +24,8 @@ class MainWindow(QMainWindow):
     def initUI(self):
         self.setWindowTitle("My Application")
         self.setGeometry(100, 100, 1000, 800)
+
+        self.apiInputDialog.dataSubmitted.connect(self.handleApiData)
 
         self.setStyleSheet("""
 /* QWidget form container */
@@ -88,6 +91,46 @@ QCheckBox {
     spacing: 6px;
     color: #333;
 }
+                           
+/* QTextEdit */
+QTextEdit {
+    border: 1.5px solid #b0b0b0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    background-color: #fcfcfc;
+    color: #222;
+    font-family: "Consolas", "Segoe UI", monospace;
+    font-size: 15px;
+    min-height: 100px;
+}
+
+QTextEdit:focus {
+    border: 1.5px solid #0078d7;
+    background-color: #fff;
+}
+
+/* QComboBox */
+QComboBox {
+    padding: 8px 12px;
+    border: 1.5px solid #b0b0b0;
+    border-radius: 8px;
+    background-color: #fcfcfc;
+    color: #222;
+    font-size: 14px;
+}
+
+QComboBox:focus {
+    border: 1.5px solid #0078d7;
+    background-color: #fff;
+}
+
+QComboBox QAbstractItemView {
+    border: 1.5px solid #0078d7;
+    selection-background-color: #e6f2fb;
+    selection-color: #222;
+    background: #fff;
+    font-size: 14px;
+}
 """)
 
         # Create the main layout
@@ -124,23 +167,18 @@ QCheckBox {
     def addItem(self):
         self.apiInputDialog.setWindowModality(Qt.ApplicationModal)
         self.apiInputDialog.show()
-        class FocusLineEdit(QLineEdit):
-            def focusInEvent(inner_self, event):
-                print(inner_self.objectName())
-                self.CurrentItemName = inner_self.objectName()
-                self.removeItemButton.setEnabled(True)
-                super().focusInEvent(event)
-
-        item = FocusLineEdit(self)
-        item.setObjectName(f"item_{self.Counter}")
-        item.setPlaceholderText(f"Enter API endpoint")
-        item.setGeometry(50, 100, 200, 30)
-        item.setAlignment(Qt.AlignLeft)
-        item.show()
-        self.ItemList.append(item)
-        self.listView.layout().addWidget(item)
-        print("Item added:", self.ItemList)
-        self.Counter += 1
+        # After dialog closes, add a QLabel with the API name if available
+        if self.APIList:
+            api_name = self.APIList[-1].get('apiName', 'Unnamed API')
+            label = QLabel(api_name, self)
+            label.setObjectName(f"item_{self.Counter}")
+            label.setMinimumHeight(40)
+            label.setStyleSheet("font-size: 16px; padding: 8px;")
+            self.ItemList.append(label)
+            self.listView.layout().addWidget(label)
+            print("Item added:", self.ItemList)
+            label.show()
+            self.Counter += 1
 
     def removeItem(self, objectName):
         if objectName == "":
@@ -156,6 +194,11 @@ QCheckBox {
                 self.CurrentItemName = ""
                 self.removeItemButton.setDisabled(True)
                 break
+
+    def handleApiData(self, data):
+        print("Received API data:", data)
+        self.APIList.append(data)
+        print("Current API List:", self.APIList)
 
 def main():
     app = QApplication(sys.argv)
